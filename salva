@@ -1,0 +1,364 @@
+```
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SALVA — игровой мессенджер</title>
+<style>
+:root{
+  --bg:#060812;--panel:rgba(14,19,38,.82);--panel2:rgba(20,27,52,.88);
+  --line:rgba(125,150,255,.16);--text:#eef3ff;--muted:#8994b6;
+  --blue:#39a7ff;--violet:#8b5cff;--green:#45e39a;--red:#ff5470;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:
+radial-gradient(circle at 20% 10%,rgba(57,167,255,.13),transparent 28%),
+radial-gradient(circle at 80% 15%,rgba(139,92,255,.14),transparent 30%),var(--bg);color:var(--text)}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.app{min-height:100vh;display:flex}
+.sidebar{position:fixed;z-index:20;left:0;top:0;bottom:0;width:250px;padding:22px 16px;
+background:rgba(7,10,23,.92);backdrop-filter:blur(18px);border-right:1px solid var(--line)}
+.brand{font-weight:900;font-size:25px;letter-spacing:3px;margin:4px 10px 25px;
+background:linear-gradient(90deg,#fff,var(--blue),var(--violet));-webkit-background-clip:text;color:transparent}
+.me-card,.nav button,.glass{background:var(--panel);border:1px solid var(--line);box-shadow:0 15px 45px rgba(0,0,0,.25)}
+.me-card{padding:14px;border-radius:18px;margin-bottom:18px}
+.avatar{width:42px;height:42px;border-radius:14px;object-fit:cover;background:linear-gradient(135deg,var(--blue),var(--violet));display:grid;place-items:center;font-weight:800}
+.me-row{display:flex;align-items:center;gap:10px}.me-name{font-weight:750}.tiny{font-size:12px;color:var(--muted)}
+.balance{margin-top:12px;color:#a9fbd2;font-weight:800}
+.nav{display:grid;gap:8px}.nav button{border-radius:14px;padding:13px 14px;text-align:left;color:#cbd5f5}
+.nav button.active,.nav button:hover{background:linear-gradient(135deg,rgba(57,167,255,.18),rgba(139,92,255,.18));color:#fff;border-color:rgba(90,160,255,.35)}
+.main{margin-left:250px;width:calc(100% - 250px);min-height:100vh;padding:22px}
+.view{max-width:1400px;margin:auto}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+h1{font-size:28px;margin:0}.sub{color:var(--muted);margin-top:5px}.btn{border:1px solid var(--line);background:var(--panel2);color:#fff;padding:10px 14px;border-radius:12px}
+.btn.primary{background:linear-gradient(135deg,var(--blue),var(--violet));border:0}.btn.danger{background:rgba(255,84,112,.12);color:#ff9aac}
+.grid{display:grid;gap:16px}.chat-layout{grid-template-columns:310px minmax(0,1fr);height:calc(100vh - 44px)}
+.chat-list{overflow:auto;padding:12px;border-radius:20px}.chat-item{padding:13px;border-radius:14px;display:flex;gap:10px;align-items:center;cursor:pointer}
+.chat-item:hover,.chat-item.active{background:rgba(75,111,210,.15)}.chat-title{font-weight:750}.chat-preview{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-window{min-width:0;min-height:0;border-radius:20px;display:flex;flex-direction:column;overflow:hidden}
+.chat-head{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
+.messages{flex:1;min-height:0;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:min(72%,650px);padding:10px 13px;border-radius:16px;background:#121a31;border:1px solid var(--line);white-space:pre-wrap;word-break:break-word}
+.msg.mine{align-self:flex-end;background:linear-gradient(135deg,rgba(57,167,255,.23),rgba(139,92,255,.23))}
+.msg .meta{font-size:10px;color:var(--muted);margin-top:5px}.msg img{max-width:100%;border-radius:12px;display:block}
+.composer{flex:0 0 auto;padding:12px;border-top:1px solid var(--line);display:flex;gap:7px;align-items:flex-end;background:rgba(8,12,25,.92)}
+.composer textarea{resize:none;min-height:44px;max-height:130px;flex:1;background:#0d1327;color:#fff;border:1px solid var(--line);border-radius:13px;padding:11px 12px;outline:none}
+.iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:#0d1327;color:#fff}
+.panel{padding:20px;border-radius:20px}.form{display:grid;gap:10px}.form input,.form textarea,.select{width:100%;background:#0c1225;color:#fff;border:1px solid var(--line);border-radius:12px;padding:11px;outline:none}
+.profile{display:grid;grid-template-columns:330px 1fr;gap:18px}.profile-card{text-align:center}.profile-card .avatar{width:100px;height:100px;margin:0 auto 12px;border-radius:28px;font-size:32px}
+.stat{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}.post{padding:16px;border-radius:18px;margin-bottom:12px}.post img{max-width:100%;border-radius:14px;margin-top:10px}.posttime{font-size:11px;color:var(--muted);margin-top:8px}
+.searchrow{display:flex;gap:8px}.searchrow input{flex:1}.userrow{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:50;display:grid;place-items:center;padding:20px}.modal{width:min(560px,100%);padding:22px;border-radius:22px}.emoji-panel,.sticker-panel{position:absolute;bottom:68px;left:12px;background:#0d1429;border:1px solid var(--line);padding:10px;border-radius:16px;display:flex;flex-wrap:wrap;gap:5px;width:260px;box-shadow:0 20px 60px #0008}.emoji-panel button,.sticker-panel button{background:#18213c;border:0;border-radius:9px;padding:7px;color:#fff}
+.toast{position:fixed;right:20px;bottom:20px;z-index:100;background:#10182e;border:1px solid var(--line);padding:12px 16px;border-radius:13px;box-shadow:0 20px 50px #0008}
+.auth{min-height:100vh;display:grid;place-items:center;padding:20px}.auth-card{width:min(440px,100%);padding:30px;border-radius:26px}.auth-logo{text-align:center;font-size:38px;font-weight:950;letter-spacing:6px;margin-bottom:8px}.auth-sub{text-align:center;color:var(--muted);margin-bottom:25px}.tabs{display:flex;gap:6px;margin-bottom:16px}.tabs button{flex:1}.error{color:#ff8b9e;font-size:13px;min-height:18px}.roulette-result{text-align:center;padding:18px;border-radius:18px;background:#0c1428;margin-top:12px;font-size:22px;font-weight:900}.reply-preview{border-left:3px solid currentColor;padding:7px 9px;margin-bottom:8px;border-radius:7px;background:rgba(255,255,255,.06);font-size:12px;opacity:.9}.reply-preview div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+@media(max-width:850px){
+ .sidebar{width:70px;padding:12px 8px}.brand{font-size:0;text-align:center}.brand:after{content:"S";font-size:25px}.me-card{padding:8px}.me-card .me-name,.me-card .tiny,.balance{display:none}.nav button{font-size:0;text-align:center;padding:13px 4px}.nav button:first-letter{font-size:20px}.main{margin-left:70px;width:calc(100% - 70px);padding:12px}.chat-layout{grid-template-columns:1fr;height:calc(100vh - 24px)}.chat-list{display:none}.profile{grid-template-columns:1fr}.msg{max-width:88%}.topbar{gap:10px}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="toast" class="toast hidden"></div>
+<script>
+"use strict";
+const DBKEY="salva_database", SESSION="session";
+const rouletteNumbers={
+red:new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]),
+black:new Set([2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35])
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function uid(){return String(Math.floor(100000+Math.random()*900000))}
+function now(){return new Date().toISOString()}
+function time(v){return new Date(v).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}
+function dateTime(v){return new Date(v).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}
+function toast(t){let e=$("#toast");e.textContent=t;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),2600)}
+function freshDB(){return {users:[],chats:[],messages:[],friends:[],posts:[],stickers:[],settings:{},roulette:{red:45,black:50,zero:5},adminId:null,session:null}}
+function db(){try{return JSON.parse(localStorage.getItem(DBKEY))||freshDB()}catch{return freshDB()}}
+function save(d){localStorage.setItem(DBKEY,JSON.stringify(d))}
+function current(d=db()){return d.users.find(u=>u.id===d.session)||null}
+function xpAdd(u,n){u.xp+=n;while(u.xp>=u.xpNext){u.xp-=u.xpNext;u.level++;u.xpNext=Math.round(u.xpNext*1.45)}}
+function ensureDB(){
+ let d=db();
+ if(!d.users)d.users=[];
+ d.users.forEach(u=>{
+  u.balance=Number.isFinite(Number(u.balance))&&Number(u.balance)>=0?Math.floor(Number(u.balance)):0;
+  u.wonCoins=Number.isFinite(Number(u.wonCoins))&&Number(u.wonCoins)>=0?Math.floor(Number(u.wonCoins)):0;
+  if(!Number.isFinite(Number(u.xp))||Number(u.xp)<0)u.xp=0;
+  if(!Number.isFinite(Number(u.level))||Number(u.level)<1)u.level=1;
+  if(!Number.isFinite(Number(u.xpNext))||Number(u.xpNext)<1)u.xpNext=100;
+ });
+ if(!d.roulette)d.roulette={red:45,black:50,zero:5};
+ save(d);return d
+}
+function avatar(u){return u.avatar?`<img class="avatar" src="${esc(u.avatar)}">`:`<div class="avatar">${esc((u.nickname||"?")[0].toUpperCase())}</div>`}
+function findUser(id){return db().users.find(u=>u.id===id)}
+function chatFor(a,b){let d=db();return d.chats.find(c=>!c.group&&c.members.includes(a)&&c.members.includes(b))}
+function createBotChat(u,d){
+ let c={id:crypto.randomUUID(),name:"Game Bot",members:[u.id,"000001"],owner:"000001",bot:true,group:false,createdAt:now()};
+ d.chats.push(c);d.messages.push({id:crypto.randomUUID(),chatId:c.id,sender:"000001",type:"text",text:"🎮 Добро пожаловать! Я Game Bot. Напиши «я» или попробуй рулетку.",at:now()});
+}
+function layout(){
+ let u=current(); if(!u){renderAuth();return}
+ let view=window.view||"messenger";
+ $("#root").innerHTML=`<div class="app">
+ <aside class="sidebar"><div class="brand">SALVA</div>
+ <div class="me-card"><div class="me-row">${avatar(u)}<div><div class="me-name">${esc(u.nickname)}</div><div class="tiny">ID ${u.id}</div></div></div><div class="balance">💰 $${u.balance.toLocaleString("ru-RU")}</div></div>
+ <nav class="nav">
+ <button class="${view==="messenger"?"active":""}" onclick="go('messenger')">💬 Мессенджер</button>
+ <button class="${view==="friends"?"active":""}" onclick="go('friends')">👥 Друзья</button>
+ <button class="${view==="profile"?"active":""}" onclick="go('profile')">👤 Профиль</button>
+ ${dB().adminId===u.id?`<button class="${view==="admin"?"active":""}" onclick="go('admin')">🛡️ Админ-панель</button>`:""}
+ </nav>
+ <button class="btn" style="width:100%;margin-top:20px" onclick="logout()">Выйти</button>
+ </aside><main class="main"><div id="view" class="view"></div></main></div>`;
+ renderView();
+}
+function dB(){return ensureDB()}
+function go(v){window.view=v;window.selectedChat=null;layout()}
+function renderView(){if(window.view==="friends")renderFriends();else if(window.view==="profile")renderProfile(current().id);else if(window.view==="admin")renderAdmin();else renderMessenger()}
+function renderMessenger(){
+ let d=dB(),u=current(), chats=d.chats.filter(c=>c.members.includes(u.id));
+ if(!window.selectedChat||!chats.some(c=>c.id===window.selectedChat))window.selectedChat=chats[0]?.id;
+ let c=chats.find(x=>x.id===window.selectedChat);
+ $("#view").innerHTML=`<div class="topbar"><div><h1>Мессенджер</h1><div class="sub">Ваши чаты и Game Bot</div></div><button class="btn primary" onclick="newGroup()">＋ Создать чат</button></div>
+ <div class="grid chat-layout"><section class="glass chat-list">${chats.map(c=>chatCard(c,d,u)).join("")}</section>
+ <section class="glass chat-window">${c?chatWindow(c,d,u):`<div style="margin:auto;color:var(--muted)">Создайте чат или выберите существующий.</div>`}</section></div>`;
+ if(c) setTimeout(()=>{let m=$("#messages");m.scrollTop=m.scrollHeight;focusComposer()},0)
+}
+function chatCard(c,d,u){
+ let title=c.bot?"Game Bot":c.group?c.name:(findUser(c.members.find(x=>x!==u.id))?.nickname||"Чат");
+ let msgs=d.messages.filter(m=>m.chatId===c.id);let last=msgs.at(-1);
+ return `<div class="chat-item ${c.id===window.selectedChat?"active":""}" onclick="selectChat('${c.id}')">${c.bot?"🎮":c.group?"👥":"💬"}<div style="min-width:0"><div class="chat-title">${esc(title)}</div><div class="chat-preview">${esc(last?.text||"Нет сообщений")}</div></div></div>`
+}
+function chatWindow(c,d,u){
+ let title=c.bot?"Game Bot":c.group?c.name:(findUser(c.members.find(x=>x!==u.id))?.nickname||"Чат");
+ let msgs=d.messages.filter(m=>m.chatId===c.id);
+ return `<div class="chat-head"><div><b>${esc(title)}</b><div class="tiny">${c.members.length} участник(а)</div></div>
+ <div><button class="btn" onclick="muteMenu('${c.id}')">🔔</button> <button class="btn" onclick="chatMenu('${c.id}')">⋯</button></div></div>
+ <div id="messages" class="messages">${msgs.map(messageHTML).join("")}</div>
+ <div class="composer" style="position:relative">
+ <div id="emojiPanel" class="emoji-panel hidden">${["😀","😂","❤️","🔥","👍","🎉","😎","😭","💀","🚀","💰","🎮","👀","✨","😈"].map(x=>`<button onclick="insertEmoji('${x}')">${x}</button>`).join("")}</div>
+ <div id="stickerPanel" class="sticker-panel hidden">${d.stickers.filter(s=>s.owner===u.id).map(s=>`<button onclick="sendSticker('${esc(s.value)}','${s.kind}')">${s.kind==="emoji"?s.value:"🎟️ "+esc(s.value.slice(0,15))}</button>`).join("")||"<span class='tiny'>Нет своих стикеров</span>"}</div>
+ <button class="iconbtn" onclick="togglePanel('emojiPanel')">😊</button><button class="iconbtn" onclick="togglePanel('stickerPanel')">🎟️</button>
+ <label class="iconbtn" style="display:grid;place-items:center">📷<input hidden type="file" accept="image/*" onchange="sendImage(event)"></label>
+ <textarea id="composerInput" placeholder="Напишите сообщение..." onkeydown="composerKey(event)"></textarea>
+ <button class="iconbtn" onclick="sendCurrent()" title="Отправить">➤</button></div>`
+}
+function messageHTML(m){
+ if(m.type==="image")return `<div class="msg ${m.sender===current().id?"mine":""}"><img src="${esc(m.data)}"><div class="meta">${time(m.at)}</div></div>`;
+ if(m.type==="sticker")return `<div class="msg ${m.sender===current().id?"mine":""}" style="font-size:42px">${esc(m.text)}<div class="meta">${time(m.at)}</div></div>`;
+ let sender=findUser(m.sender),reply="";if(m.replyTo){let original=db().messages.find(x=>x.id===m.replyTo);if(original)reply=`<div class="reply-preview"><b>↩ Ответ на ставку</b><div>${esc(original.text)}</div></div>`}return `<div class="msg ${m.sender===current().id?"mine":""}">${m.sender!==current().id&&sender?`<div class="tiny">${esc(sender.nickname)}</div>`:""}${reply}${esc(m.text)}<div class="meta">${time(m.at)}</div></div>`
+}
+function selectChat(id){window.selectedChat=id;renderMessenger()}
+function composerKey(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendCurrent()}}
+function focusComposer(){
+ setTimeout(()=>{let el=$("#composerInput");if(el){el.focus();let len=el.value.length;try{el.setSelectionRange(len,len)}catch{}}},0);
+}
+function sendCurrent(){
+ let el=$("#composerInput"),text=el.value.trim();if(!text)return;
+ sendMessage(window.selectedChat,text);focusComposer()
+}
+function sendMessage(chatId,text,type="text"){
+ let d=dB(),u=current(d);if(!u)return;d.messages.push({id:crypto.randomUUID(),chatId,sender:u.id,type,text,at:now()});xpAdd(u,3);save(d);renderMessenger();
+ let c=d.chats.find(x=>x.id===chatId);if(c?.bot)setTimeout(()=>botReply(chatId,text),150)
+}
+function botReply(chatId,text){
+ let d=dB(),u=current();if(!u)return;
+ let t=text.trim().toLowerCase(),reply="";
+ if(t==="я"||t==="/я")reply=`👤 Имя: ${u.nickname}\n🆔 ID: ${u.id}\n💰 Баланс: $${u.balance.toLocaleString("ru-RU")}\n⭐ Уровень: ${u.level}\n⚡ XP: ${u.xp}/${u.xpNext}\n🏆 Выиграно монет: $${u.wonCoins.toLocaleString("ru-RU")}`;
+ else if(parseBet(t)) roulette(chatId,t);
+ else reply="🎮 Команды: «я», «/я». Рулетка: «21 100», «черный 100к», «красный 1кк».";
+ if(reply){d.messages.push({id:crypto.randomUUID(),chatId,sender:"000001",type:"text",text:reply,at:now()});save(d);if(window.selectedChat===chatId)renderMessenger()}
+}
+function togglePanel(id){document.querySelectorAll(".emoji-panel,.sticker-panel").forEach(e=>e.id===id?e.classList.toggle("hidden"):e.classList.add("hidden"))}
+function insertEmoji(e){let x=$("#composerInput");x.value+=e;x.focus()}
+function sendSticker(v){togglePanel("stickerPanel");sendMessage(window.selectedChat,v,"sticker")}
+function sendImage(e){let f=e.target.files[0];if(!f)return;if(f.size>5*1024*1024){toast("❌ Изображение больше 5 МБ");return}
+ let r=new FileReader();r.onload=()=>{let d=dB(),u=current(d);if(!u)return;d.messages.push({id:crypto.randomUUID(),chatId:window.selectedChat,sender:u.id,type:"image",data:r.result,at:now()});xpAdd(u,3);save(d);renderMessenger()};r.readAsDataURL(f);e.target.value=""
+}
+function parseAmount(s){
+ s=String(s).toLowerCase().replace(/\s/g,"");let m=s.match(/^(\d+(?:[.,]\d+)?)(ккк|kkk|кк|kk|к|k)?$/);if(!m)return NaN;
+ let n=Number(m[1].replace(",",".")),x=m[2]||"";let mult=/^(ккк|kkk)$/.test(x)?1e9:/^(кк|kk)$/.test(x)?1e6:/^(к|k)$/.test(x)?1e3:1;let value=n*mult;return Number.isFinite(value)&&value<=Number.MAX_SAFE_INTEGER?value:NaN
+}
+function parseBet(t){
+ let a=t.split(/\s+/);if(a.length!==2)return null;
+ let target=a[0],amount=parseAmount(a[1]);if(!Number.isFinite(amount)||amount<=0||amount>1e9)return null;
+ if(/^\d+$/.test(target)&&+target>=0&&+target<=36)return {kind:"number",target:+target,amount};
+ if(["черный","чёрный","black"].includes(target))return {kind:"color",target:"black",amount};
+ if(["красный","red"].includes(target))return {kind:"color",target:"red",amount};
+ return null
+}
+function weightedColor(d){
+ let r=Math.max(0,Number(d.roulette.red)||0),b=Math.max(0,Number(d.roulette.black)||0),z=Math.max(0,Number(d.roulette.zero)||0),sum=r+b+z;
+ let n=Math.random()*sum;if(n<r)return"red";if(n<r+b)return"black";return"zero"
+}
+function roulette(chatId,t){
+ let bet=parseBet(t),d=dB(),u=current(d);if(!bet||!u)return;
+ const userId=u.id;
+ if(!Number.isSafeInteger(bet.amount)||bet.amount<=0){toast("Некорректная сумма");return}
+ if(u.balance<bet.amount){
+  d.messages.push({id:crypto.randomUUID(),chatId,sender:"000001",type:"text",text:"❌ Недостаточно монет для этой ставки.",at:now()});
+  save(d);renderMessenger();return
+ }
+ u.balance-=bet.amount;
+ const betMsg={id:crypto.randomUUID(),chatId,sender:userId,type:"text",text:t,at:now()};
+ d.messages.push(betMsg);
+ const targetText=bet.kind==="number"?`число ${bet.target}`:(bet.target==="red"?"красное":"чёрное");
+ const botText=`🎰 Ставка принята!\n💬 ${targetText} — $${bet.amount.toLocaleString("ru-RU")}\n⏳ Колесо уже запущено. Результат будет через 15 секунд. Удачи! 🍀`;
+ d.messages.push({id:crypto.randomUUID(),chatId,sender:"000001",type:"text",text:botText,at:now(),replyTo:betMsg.id});
+ save(d);renderMessenger();
+
+ setTimeout(()=>{
+  let d2=dB(),u2=d2.users.find(x=>x.id===userId);if(!u2)return;
+  let color=weightedColor(d2);
+  let num=color==="zero"?0:(()=>{let n;do{n=Math.floor(Math.random()*36)+1}while((color==="red"&&!rouletteNumbers.red.has(n))||(color==="black"&&!rouletteNumbers.black.has(n)));return n})();
+  let win=0;
+  if(bet.kind==="number"&&bet.target===num)win=bet.amount*35;
+  else if(bet.kind==="color"&&bet.target===color)win=bet.amount*2;
+  if(win){
+   u2.balance=Math.min(Number.MAX_SAFE_INTEGER,u2.balance+win);
+   u2.wonCoins=Math.min(Number.MAX_SAFE_INTEGER,u2.wonCoins+win);
+  }
+  xpAdd(u2,10);
+  let icon=color==="red"?"🔴":color==="black"?"⚫":"🟢";
+  let text=`🎰 Результат: ${icon} ${num}\n${win?`🏆 Вы выиграли $${win.toLocaleString("ru-RU")}!`:`❌ Вы проиграли $${bet.amount.toLocaleString("ru-RU")}.`}\n💰 Баланс: $${u2.balance.toLocaleString("ru-RU")}`;
+  d2.messages.push({id:crypto.randomUUID(),chatId,sender:"000001",type:"text",text,at:now()});
+  save(d2);
+  if(d2.session===userId)renderMessenger();
+ },15000);
+
+ setTimeout(()=>{
+  let d3=dB(),c=d3.chats.find(x=>x.id===chatId);
+  if(c){
+   d3.messages.push({id:crypto.randomUUID(),chatId,sender:"000001",type:"text",text:"⏳ До итогов осталось 5 секунд!",at:now()});
+   save(d3);
+   if(d3.session===userId)renderMessenger();
+  }
+ },10000);
+}
+function newGroup(){
+ let d=dB(),u=current(),friends=d.friends.filter(x=>x.a===u.id||x.b===u.id).map(x=>x.a===u.id?x.b:x.a),list=friends.map(id=>{let f=findUser(id);return f?`<label><input type="checkbox" value="${id}"> ${esc(f.nickname)} (${id})</label>`:""}).join("");
+ modal(`<h2>Создать чат</h2><div class="form"><input id="groupName" placeholder="Название чата"><div class="form">${list||"<span class='tiny'>Сначала добавьте друзей.</span>"}</div><button class="btn primary" onclick="createGroup()">Создать</button></div>`)
+}
+function createGroup(){
+ let d=dB(),u=current(),name=$("#groupName").value.trim(),ids=[...document.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
+ if(!name||!ids.length){toast("Введите название и выберите друзей");return}
+ d.chats.push({id:crypto.randomUUID(),name,members:[u.id,...ids],owner:u.id,group:true,bot:false,createdAt:now()});save(d);closeModal();renderMessenger()
+}
+function chatMenu(id){
+ let d=dB(),c=d.chats.find(x=>x.id===id),u=current();if(!c)return;
+ if(c.bot){toast("Game Bot нельзя удалить");return}
+ if(c.group&&c.owner===u.id){let opts=c.members.filter(x=>x!==u.id).map(id=>{let f=findUser(id);return `<button class="btn" onclick="kick('${id}','${c.id}');closeModal()">${esc(f?.nickname||id)} — кик</button>`}).join("");modal(`<h2>Управление чатом</h2><div class="form">${opts||"<span class='tiny'>Нет участников для кика.</span>"}<button class="btn danger" onclick="deleteChat('${id}')">🗑 Удалить чат</button></div>`)}
+ else modal(`<h2>Чат</h2><div class="form"><button class="btn danger" onclick="deleteChat('${id}')">🗑 Удалить чат</button></div>`)
+}
+function kick(userId,chatId){let d=dB(),c=d.chats.find(x=>x.id===chatId);if(c?.owner!==current().id)return;c.members=c.members.filter(x=>x!==userId);save(d);renderMessenger()}
+function deleteChat(id){let d=dB(),c=d.chats.find(x=>x.id===id);if(!c)return;if(c.bot){toast("Этот чат нельзя удалить");return}d.chats=d.chats.filter(x=>x.id!==id);d.messages=d.messages.filter(m=>m.chatId!==id);save(d);closeModal();window.selectedChat=null;renderMessenger()}
+function muteMenu(id){let d=dB(),key=current().id+":"+id,cur=d.settings[key]||0;modal(`<h2>Уведомления</h2><div class="form">${[[3600000,"1 час"],[21600000,"6 часов"],[86400000,"1 день"],[Infinity,"Навсегда"],[0,"Включить"]].map(([v,n])=>`<button class="btn" onclick="setMute('${id}',${v});closeModal()">🔕 ${n}</button>`).join("")}</div>`)}
+function setMute(id,v){let d=dB(),key=current().id+":"+id;d.settings[key]=v?Date.now()+v:0;save(d);toast(v?"Уведомления отключены":"Уведомления включены")}
+function renderFriends(){
+ let d=dB(),u=current(),rels=d.friends.filter(x=>x.a===u.id||x.b===u.id),ids=rels.map(x=>x.a===u.id?x.b:x.a);
+ $("#view").innerHTML=`<div class="topbar"><div><h1>Друзья</h1><div class="sub">Поиск по никнейму или ID</div></div></div>
+ <section class="glass panel"><div class="searchrow"><input id="friendSearch" placeholder="Никнейм или 6-значный ID"><button class="btn primary" onclick="searchFriend()">Найти</button></div><div id="friendResult" style="margin-top:12px"></div></section>
+ <section class="glass panel" style="margin-top:16px"><h2>Ваши друзья</h2>${ids.map(id=>{let f=findUser(id);return f?`<div class="userrow"><div class="me-row">${avatar(f)}<div><b>${esc(f.nickname)}</b><div class="tiny">ID ${f.id}</div></div></div><div><button class="btn" onclick="openDM('${f.id}')">💬</button><button class="btn danger" onclick="removeFriend('${f.id}')">Удалить</button></div></div>`:""}).join("")||"<div class='tiny'>Пока нет друзей.</div>"}</section>`
+}
+function searchFriend(){
+ let q=$("#friendSearch").value.trim().toLowerCase(),u=current(),f=db().users.find(x=>x.id!==u.id&&x.id!=="000001"&&(x.id===q||x.nickname.toLowerCase()===q||x.nickname.toLowerCase().includes(q)));
+ $("#friendResult").innerHTML=f?`<div class="userrow">${avatar(f)}<div><b>${esc(f.nickname)}</b><div class="tiny">ID ${f.id}</div></div><button class="btn primary" onclick="addFriend('${f.id}')">Добавить</button></div>`:"<div class='tiny'>Пользователь не найден.</div>"
+}
+function addFriend(id){let d=dB(),u=current();if(id==="000001"||id===u.id)return;if(!d.friends.some(x=>(x.a===u.id&&x.b===id)||(x.a===id&&x.b===u.id)))d.friends.push({a:u.id,b:id});save(d);toast("Друг добавлен");renderFriends()}
+function removeFriend(id){let d=dB(),u=current();d.friends=d.friends.filter(x=>!((x.a===u.id&&x.b===id)||(x.a===id&&x.b===u.id)));save(d);renderFriends()}
+function openDM(id){let d=dB(),u=current(),c=chatFor(u.id,id);if(!c){c={id:crypto.randomUUID(),name:"",members:[u.id,id],owner:u.id,group:false,bot:false,createdAt:now()};d.chats.push(c);save(d)}window.view="messenger";window.selectedChat=c.id;layout()}
+function renderProfile(id){
+ let d=dB(),u=findUser(id),me=current(),isMe=id===me.id,posts=d.posts.filter(p=>p.userId===id).sort((a,b)=>b.at.localeCompare(a.at));
+ $("#view").innerHTML=`<div class="topbar"><div><h1>Профиль</h1></div>${!isMe?`<button class="btn primary" onclick="toggleFriend('${id}')">${d.friends.some(x=>(x.a===me.id&&x.b===id)||(x.a===id&&x.b===me.id))?"Удалить из друзей":"Добавить в друзья"}</button>`:""}</div>
+ <div class="profile"><section class="glass panel profile-card">${avatar(u)}<h2>${esc(u.nickname)}</h2><div class="tiny">ID ${u.id}</div><p>${esc(u.bio||"Описание профиля не заполнено.")}</p>
+ <div class="stat"><span>⭐ Уровень</span><b>${u.level}</b></div><div class="stat"><span>⚡ XP</span><b>${u.xp}/${u.xpNext}</b></div><div class="stat"><span>💰 Баланс</span><b>$${u.balance.toLocaleString("ru-RU")}</b></div><div class="stat"><span>🏆 Выиграно</span><b>$${u.wonCoins.toLocaleString("ru-RU")}</b></div>
+ ${isMe?`<button class="btn primary" style="width:100%;margin-top:15px" onclick="editProfile()">Редактировать профиль</button><button class="btn" style="width:100%;margin-top:8px" onclick="newPost()">＋ Публикация</button><button class="btn" style="width:100%;margin-top:8px" onclick="newSticker()">🎟️ Создать стикер</button>`:""}</section>
+ <section>${posts.map(p=>`<article class="glass post"><div class="me-row">${avatar(u)}<div><b>${esc(u.nickname)}</b><div class="tiny">ID ${u.id}</div></div></div>${p.text?`<p>${esc(p.text)}</p>`:""}${p.image?`<img src="${esc(p.image)}">`:""}<div class="posttime">${dateTime(p.at)}</div></article>`).join("")||`<div class="glass panel tiny">Публикаций пока нет.</div>`}</section></div>`
+}
+function toggleFriend(id){let d=dB(),u=current();if(d.friends.some(x=>(x.a===u.id&&x.b===id)||(x.a===id&&x.b===u.id)))removeFriend(id);else addFriend(id);renderProfile(id)}
+function editProfile(){let u=current();modal(`<h2>Редактировать профиль</h2><div class="form"><input id="pNick" value="${esc(u.nickname)}" placeholder="Никнейм"><textarea id="pBio" placeholder="Описание">${esc(u.bio||"")}</textarea><input id="pAvatar" placeholder="URL аватара (необязательно)" value="${esc(u.avatar||"")}"><button class="btn primary" onclick="saveProfile()">Сохранить</button></div>`)}
+function saveProfile(){let d=dB(),u=current(d),n=$("#pNick").value.trim();if(!n){toast("Введите никнейм");return}if(d.users.some(x=>x.id!==u.id&&x.nickname.toLowerCase()===n.toLowerCase())){toast("Такой никнейм уже занят");return}u.nickname=n;u.bio=$("#pBio").value.trim();u.avatar=$("#pAvatar").value.trim();save(d);closeModal();layout()}
+function newPost(){modal(`<h2>Новая публикация</h2><div class="form"><textarea id="postText" placeholder="Текст"></textarea><input id="postFile" type="file" accept="image/*"><button class="btn primary" onclick="createPost()">Опубликовать</button></div>`)}
+function createPost(){let f=$("#postFile").files[0];let text=$("#postText").value.trim();if(!text&&!f){toast("Добавьте текст или изображение");return}let done=image=>{let d=dB(),u=current(d);if(!u)return;d.posts.push({id:crypto.randomUUID(),userId:u.id,text,image,at:now()});xpAdd(u,15);save(d);closeModal();renderProfile(u.id)};if(f){if(f.size>5*1024*1024){toast("Файл больше 5 МБ");return}let r=new FileReader();r.onload=()=>done(r.result);r.readAsDataURL(f)}else done("")}
+function newSticker(){modal(`<h2>Новый стикер</h2><div class="form"><select id="stKind" class="select"><option value="emoji">Эмодзи</option><option value="text">Текст</option></select><input id="stValue" placeholder="Например 😎 или GG!"><button class="btn primary" onclick="createSticker()">Сохранить</button></div>`)}
+function createSticker(){let v=$("#stValue").value.trim();if(!v){toast("Введите стикер");return}let d=dB(),u=current(d);if(!u)return;d.stickers.push({id:crypto.randomUUID(),owner:u.id,kind:$("#stKind").value,value:v});save(d);closeModal();toast("Стикер создан")}
+function renderAdmin(){
+ let d=dB(),u=current();if(d.adminId!==u.id){go("messenger");return}
+ $("#view").innerHTML=`<div class="topbar"><div><h1>Админ-панель</h1><div class="sub">Управление пользователями и рулеткой</div></div></div>
+ <section class="glass panel"><h2>Монеты</h2><div class="form"><select id="coinUser" class="select">${d.users.map(x=>`<option value="${x.id}">${esc(x.nickname)} — ID ${x.id} — $${x.balance.toLocaleString("ru-RU")}</option>`).join("")}</select><input id="coinAmount" placeholder="Количество монет"><button class="btn primary" onclick="giveCoins()">Выдать</button></div></section>
+ <section class="glass panel" style="margin-top:16px"><h2>Изменение ID</h2><div class="form"><select id="idUser" class="select">${d.users.map(x=>`<option value="${x.id}">${esc(x.nickname)} — ${x.id}</option>`).join("")}</select><input id="newId" maxlength="6" placeholder="Новый 6-значный ID"><button class="btn primary" onclick="changeId()">Изменить ID</button></div></section>
+ <section class="glass panel" style="margin-top:16px"><h2>🎰 Шансы рулетки</h2><div class="form"><label>🔴 Красное %<input id="rRed" type="number" min="0" step="0.01" value="${d.roulette.red}"></label><label>⚫ Чёрное %<input id="rBlack" type="number" min="0" step="0.01" value="${d.roulette.black}"></label><label>🟢 Зеро %<input id="rZero" type="number" min="0" step="0.01" value="${d.roulette.zero}"></label><div class="tiny">Можно задать любые значения. После сохранения они автоматически нормализуются до 100%.</div><button class="btn primary" onclick="saveRoulette()">Сохранить шансы</button></div></section>`
+}
+function giveCoins(){
+ let d=dB(),admin=current(d),id=$("#coinUser").value;
+ if(!admin||d.adminId!==admin.id){toast("Нет прав администратора");return}
+ let raw=$("#coinAmount").value.trim(),n=parseAmount(raw);
+ if(!Number.isSafeInteger(n)||n<=0){toast("Введите целое положительное количество монет");return}
+ let u=d.users.find(x=>x.id===id);
+ if(!u){toast("Пользователь не найден");return}
+ if(u.balance>Number.MAX_SAFE_INTEGER-n){toast("Слишком большая сумма");return}
+ u.balance+=n;
+ save(d);toast(`Выдано $${n.toLocaleString("ru-RU")} пользователю ${u.nickname}`);renderAdmin()
+}
+function changeId(){let d=dB(),old=$("#idUser").value,n=$("#newId").value.trim();if(!/^\d{6}$/.test(n)||n==="000001"||d.users.some(x=>x.id===n)){toast("ID должен быть уникальным, из 6 цифр и не 000001");return}let u=findUser(old);if(!u)return;let botId="000001";d.users.forEach(x=>{if(x.id===old)x.id=n});d.friends.forEach(x=>{if(x.a===old)x.a=n;if(x.b===old)x.b=n});
+ d.chats.forEach(c=>{c.members=c.members.map(x=>x===old?n:x);if(c.owner===old)c.owner=n});
+ d.messages.forEach(m=>{if(m.sender===old)m.sender=n});
+ d.posts.forEach(p=>{if(p.userId===old)p.userId=n});
+ d.stickers.forEach(st=>{if(st.owner===old)st.owner=n});
+ let settings={};Object.entries(d.settings||{}).forEach(([k,v])=>{
+  let parts=k.split(":");settings[(parts[0]===old?n:parts[0])+":"+parts.slice(1).map(x=>x===old?n:x).join(":")]=v;
+ });d.settings=settings;
+ if(d.adminId===old)d.adminId=n;if(d.session===old)d.session=n;save(d);toast("ID изменён");layout()}
+function saveRoulette(){let d=dB(),r=[Number($("#rRed").value),Number($("#rBlack").value),Number($("#rZero").value)];if(r.some(x=>!Number.isFinite(x)||x<0)){toast("Некорректные значения");return}let sum=r[0]+r[1]+r[2];if(sum<=0){toast("Сумма шансов должна быть больше 0");return}d.roulette={red:r[0]/sum,black:r[1]/sum,zero:r[2]/sum};save(d);toast("Шансы сохранены и нормализованы");renderAdmin()}
+function modal(content){let old=$("#modal");if(old)old.remove();document.body.insertAdjacentHTML("beforeend",`<div id="modal" class="overlay" onclick="if(event.target===this)closeModal()"><div class="glass modal">${content}<button class="btn" style="margin-top:12px" onclick="closeModal()">Закрыть</button></div></div>`)}
+function closeModal(){$("#modal")?.remove()}
+function renderAuth(){
+ $("#root").innerHTML=`<div class="auth"><section class="glass auth-card"><div class="auth-logo">SALVA</div><div class="auth-sub">Игровой мессенджер нового поколения</div><div class="tabs"><button type="button" class="btn primary" id="loginTab" onclick="authMode('login')">Войти</button><button type="button" class="btn" id="regTab" onclick="authMode('register')">Регистрация</button></div><div id="authForm"></div></section></div>`;authMode("login")
+}
+function authMode(mode){
+ window.currentAuthMode=mode;
+ const loginTab=$("#loginTab"),regTab=$("#regTab");
+ if(loginTab) loginTab.classList.toggle("primary",mode==="login");
+ if(regTab) regTab.classList.toggle("primary",mode==="register");
+ const form=$("#authForm");
+ if(!form)return;
+ if(mode==="login"){
+   form.innerHTML=`<form class="form" onsubmit="event.preventDefault();login()">
+     <input id="aNick" autocomplete="username" placeholder="Никнейм">
+     <input id="aPass" type="password" autocomplete="current-password" placeholder="Пароль">
+     <div id="aErr" class="error"></div>
+     <button type="submit" class="btn primary">Войти</button>
+   </form>`;
+ }else{
+   form.innerHTML=`<form class="form" onsubmit="event.preventDefault();register()">
+     <input id="aNick" autocomplete="username" placeholder="Никнейм">
+     <input id="aPass" type="password" autocomplete="new-password" placeholder="Пароль">
+     <input id="aPass2" type="password" autocomplete="new-password" placeholder="Повтор пароля">
+     <div id="aErr" class="error"></div>
+     <button type="submit" class="btn primary">Создать аккаунт</button>
+   </form>`;
+ }
+}
+function authError(t){$("#aErr").textContent=t}
+function register(){
+ let d=dB(),n=$("#aNick").value.trim(),p=$("#aPass").value,p2=$("#aPass2").value;
+ if(!n||!p||!p2)return authError("Заполните все поля");if(p.length<4)return authError("Пароль минимум 4 символа");if(p!==p2)return authError("Пароли не совпадают");if(d.users.some(u=>u.nickname.toLowerCase()===n.toLowerCase()))return authError("Такой никнейм уже занят");
+ let id;do{id=uid()}while(id==="000001"||d.users.some(u=>u.id===id));
+ let u={id,nickname:n,password:p,balance:100,wonCoins:0,level:1,xp:0,xpNext:100,bio:"",avatar:"",createdAt:now()};
+ d.users.push(u);if(!d.adminId)d.adminId=id;d.session=id;createBotChat(u,d);save(d);layout()
+}
+function login(){
+ let d=dB(),n=$("#aNick").value.trim(),p=$("#aPass").value;if(!n||!p)return authError("Введите никнейм и пароль");let u=d.users.find(x=>x.nickname.toLowerCase()===n.toLowerCase()&&x.password===p);if(!u)return authError("Неверный никнейм или пароль");d.session=u.id;save(d);layout()
+}
+function logout(){let d=dB();d.session=null;save(d);window.view="messenger";renderAuth()}
+function boot(){let d=ensureDB();if(d.session&&d.users.some(u=>u.id===d.session))layout();else renderAuth()}
+window.addEventListener("beforeunload",()=>{});
+boot();
+</script>
+</body>
+</html>
+```
